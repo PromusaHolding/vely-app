@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 
-export function Badge({ className, variant, children }) {
+export function Badge({ className, variant = 'default', children }) {
   const base = 'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium';
   const variants = {
     default: 'bg-muted text-foreground',
@@ -11,7 +11,7 @@ export function Badge({ className, variant, children }) {
   };
 
   return (
-    <span className={cn(base, variants[variant] || variants.default, className)}>
+    <span className={cn(base, variants[variant], className)}>
       {children}
     </span>
   );

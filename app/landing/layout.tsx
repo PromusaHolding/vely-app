@@ -34,7 +34,7 @@ export default function LandingLayout({ children }: { children: ReactNode }) {
         {/* Footer */}
         <footer className="bg-white border-t mt-12">
           <div className="max-w-6xl mx-auto px-6 py-8 text-center text-gray-600">
-            © {new Date().getFullYear()} DecoPlatform. Todos los derechos reservados.
+            © {new Date().getFullYear()} Vely. Todos los derechos reservados.
           </div>
         </footer>
       </body>
