@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const SafeCarousel = ({ children }: { children: React.ReactNode }) => (
   <div className="overflow-x-auto pb-6">
@@ -28,7 +29,7 @@ const pricingTiers = [
     ],
     cta: 'Comenzar Gratis',
     isMostPopular: false,
-    href: '/signup?plan=basico',
+    planKey: 'basico',
     className: 'bg-white',
     buttonVariant: 'outline',
     buttonClassName: 'text-primary border-primary hover:bg-primary/10 hover:text-primary',
@@ -36,7 +37,7 @@ const pricingTiers = [
   },
   {
     name: 'Starter',
-    price: { monthly: 9, semiannually: 9 * 0.9, annually: 9 * 0.8 },
+    price: { monthly: 2.9, semiannually: 2.9 * 0.9, annually: 2.9 * 0.8 },
     frequency: { monthly: '/ mes', semiannually: '/ mes', annually: '/ mes' },
     description: 'Para decoradores que empiezan a profesionalizarse y necesitan más capacidad.',
     features: [
@@ -48,7 +49,7 @@ const pricingTiers = [
     ],
     cta: 'Actualizar a Starter',
     isMostPopular: false,
-    href: '/signup?plan=starter',
+    planKey: 'starter',
     className: 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white',
     buttonVariant: 'default',
     buttonClassName: 'bg-white text-blue-600 hover:bg-white/90',
@@ -56,7 +57,7 @@ const pricingTiers = [
   },
   {
     name: 'Premium',
-    price: { monthly: 19, semiannually: 19 * 0.9, annually: 19 * 0.8 },
+    price: { monthly: 11.57, semiannually: 11.57 * 0.9, annually: 11.57 * 0.8 },
     frequency: { monthly: '/ mes', semiannually: '/ mes', annually: '/ mes' },
     description: 'La solución completa para profesionales que buscan impresionar a sus clientes.',
     features: [
@@ -70,7 +71,7 @@ const pricingTiers = [
     ],
     cta: 'Actualizar a Premium',
     isMostPopular: true,
-    href: '/signup?plan=premium',
+    planKey: 'premium',
     className: 'bg-gradient-to-b from-blue-600 to-cyan-400 text-white',
     buttonVariant: 'default',
     buttonClassName: 'bg-white text-blue-600 hover:bg-white/90',
@@ -78,7 +79,7 @@ const pricingTiers = [
   },
   {
     name: 'Profesional',
-    price: { monthly: 49, semiannually: 49 * 0.9, annually: 49 * 0.8 },
+    price: { monthly: 20.25, semiannually: 49 * 0.9, annually: 49 * 0.8 },
     frequency: { monthly: '/ mes', semiannually: '/ mes', annually: '/ mes' },
     description: 'Para agencias y equipos que necesitan el máximo poder y personalización.',
     features: [
@@ -91,7 +92,7 @@ const pricingTiers = [
     ],
     cta: 'Actualizar a Profesional',
     isMostPopular: false,
-    href: '/signup?plan=profesional',
+    planKey: 'profesional',
     className: 'bg-gradient-to-r from-primary to-accent text-white',
     buttonVariant: 'default',
     buttonClassName: 'bg-white text-primary hover:bg-white/90',
@@ -101,56 +102,59 @@ const pricingTiers = [
 
 export default function PlansSection() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'semiannually' | 'annually'>('monthly');
+  const { format } = useCurrency();
+
+  const handleCheckout = async (planKey: string) => {
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planKey, billingCycle }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'No se pudo iniciar el pago');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al iniciar el pago');
+    }
+  };
 
   return (
     <section id="plans" className="isolate relative pt-0 px-4">
       <div className="mx-auto max-w-screen-2xl">
-        {/* 🔹 Selector de plan */}
+        {/* Selector de ciclo */}
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 pb-12 text-center">
           <div className="flex items-center justify-center gap-2 rounded-full border bg-background/50 p-2">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={cn(
-                'rounded-full px-6 py-2 text-sm font-medium',
-                billingCycle === 'monthly'
-                  ? 'bg-primary text-white shadow'
-                  : 'bg-transparent text-muted-foreground'
-              )}
-            >
-              Mensual
-            </button>
-            <button
-              onClick={() => setBillingCycle('semiannually')}
-              className={cn(
-                'rounded-full px-6 py-2 text-sm font-medium',
-                billingCycle === 'semiannually'
-                  ? 'bg-primary text-white shadow'
-                  : 'bg-transparent text-muted-foreground'
-              )}
-            >
-              Semestral{' '}
-              <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">
-                Ahorra 10%
-              </Badge>
-            </button>
-            <button
-              onClick={() => setBillingCycle('annually')}
-              className={cn(
-                'rounded-full px-6 py-2 text-sm font-medium',
-                billingCycle === 'annually'
-                  ? 'bg-primary text-white shadow'
-                  : 'bg-transparent text-muted-foreground'
-              )}
-            >
-              Anual{' '}
-              <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">
-                Ahorra 20%
-              </Badge>
-            </button>
+            {['monthly', 'semiannually', 'annually'].map((cycle) => (
+              <button
+                key={cycle}
+                onClick={() => setBillingCycle(cycle as any)}
+                className={cn(
+                  'rounded-full px-6 py-2 text-sm font-medium',
+                  billingCycle === cycle ? 'bg-primary text-white shadow' : 'bg-transparent text-muted-foreground'
+                )}
+              >
+                {cycle === 'monthly' && 'Mensual'}
+                {cycle === 'semiannually' && 'Semestral'}
+                {cycle === 'annually' && 'Anual'}
+                {cycle === 'semiannually' && (
+                  <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">Ahorra 10%</Badge>
+                )}
+                {cycle === 'annually' && (
+                  <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-100">Ahorra 20%</Badge>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 🔹 Grilla desktop */}
+        {/* Grilla desktop */}
         <div className="hidden lg:grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {pricingTiers.map((tier, index) => (
             <motion.div
@@ -159,32 +163,19 @@ export default function PlansSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card
-                className={cn(
-                  'relative flex h-full flex-col rounded-2xl border-0 shadow-2xl transition-all duration-300 hover:-translate-y-2 ring-4 ring-offset-4 ring-offset-background',
-                  tier.ringClassName
-                )}
-              >
+              <Card className={cn('relative flex h-full flex-col rounded-2xl border-0 shadow-2xl transition-all duration-300 hover:-translate-y-2 ring-4 ring-offset-4 ring-offset-background', tier.ringClassName)}>
                 {tier.isMostPopular && (
                   <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 transform">
                     <div className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-yellow-900 shadow-lg">
-                      <Star className="h-4 w-4" />
-                      Más Popular
+                      <Star className="h-4 w-4" /> Más Popular
                     </div>
                   </div>
                 )}
-
                 <div className={cn('flex-grow flex flex-col p-8 rounded-2xl', tier.className)}>
                   <CardHeader className="p-0 text-center">
-                    <CardTitle
-                      className={cn(
-                        'font-headline text-3xl',
-                        tier.name === 'Básico' && 'text-slate-900'
-                      )}
-                    >
+                    <CardTitle className={cn('font-headline text-3xl', tier.name === 'Básico' && 'text-slate-900')}>
                       {tier.name}
                     </CardTitle>
-
                     <div className="mt-4 flex items-baseline justify-center gap-1">
                       <AnimatePresence mode="wait">
                         <motion.span
@@ -193,42 +184,20 @@ export default function PlansSection() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className={cn(
-                            'text-5xl font-bold tracking-tight',
-                            tier.name === 'Básico' && 'text-slate-900'
-                          )}
+                          className={cn('text-5xl font-bold tracking-tight', tier.name === 'Básico' && 'text-slate-900')}
                         >
-                          {tier.price[billingCycle] === 0
-                            ? 'Gratis'
-                            : `$${tier.price[billingCycle].toFixed(0)}`}
+                          {tier.price[billingCycle] === 0 ? 'Gratis' : format(tier.price[billingCycle])}
                         </motion.span>
                       </AnimatePresence>
-                      <span
-                        className={cn(
-                          'text-sm',
-                          tier.name === 'Básico' ? 'text-slate-600' : 'text-white/70'
-                        )}
-                      >
-                        {tier.price.monthly !== 0
-                          ? tier.frequency[billingCycle]
-                          : tier.frequency.monthly}
+                      <span className={cn('text-sm', tier.name === 'Básico' ? 'text-slate-600' : 'text-white/70')}>
+                        {tier.price.monthly !== 0 ? tier.frequency[billingCycle] : tier.frequency.monthly}
                       </span>
                     </div>
                   </CardHeader>
 
                   <CardContent className="flex-1 px-0 mt-8 mb-8">
-                    <div
-                      className={cn(
-                        'relative rounded-lg p-6 bg-white/10 backdrop-blur-sm min-h-[6rem] flex items-center justify-center',
-                        tier.name === 'Básico' && 'bg-slate-200/50'
-                      )}
-                    >
-                      <p
-                        className={cn(
-                          'text-sm text-center',
-                          tier.name === 'Básico' ? 'text-slate-800' : 'text-white/90'
-                        )}
-                      >
+                    <div className={cn('relative rounded-lg p-6 bg-white/10 backdrop-blur-sm min-h-[6rem] flex items-center justify-center', tier.name === 'Básico' && 'bg-slate-200/50')}>
+                      <p className={cn('text-sm text-center', tier.name === 'Básico' ? 'text-slate-800' : 'text-white/90')}>
                         {tier.description}
                       </p>
                     </div>
@@ -236,23 +205,8 @@ export default function PlansSection() {
                     <ul className="space-y-4">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <CheckCircle
-                            className={cn(
-                              'h-5 w-5 flex-shrink-0',
-                              tier.name === 'Básico'
-                                ? 'text-slate-500'
-                                : 'text-white/80'
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              tier.name === 'Básico'
-                                ? 'text-slate-700'
-                                : 'text-white/90'
-                            )}
-                          >
-                            {feature}
-                          </span>
+                          <CheckCircle className={cn('h-5 w-5 flex-shrink-0', tier.name === 'Básico' ? 'text-slate-500' : 'text-white/80')} />
+                          <span className={cn(tier.name === 'Básico' ? 'text-slate-700' : 'text-white/90')}>{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -260,12 +214,12 @@ export default function PlansSection() {
 
                   <CardFooter className="p-0 mt-auto">
                     <Button
-                      asChild
                       size="lg"
                       variant={tier.buttonVariant as any}
                       className={cn('w-full py-6 text-lg', tier.buttonClassName)}
+                      onClick={() => handleCheckout(tier.planKey)}
                     >
-                      <Link href={tier.href}>{tier.cta}</Link>
+                      {tier.cta}
                     </Button>
                   </CardFooter>
                 </div>
@@ -274,12 +228,69 @@ export default function PlansSection() {
           ))}
         </div>
 
-        {/* 🔹 Mobile */}
+        {/* Mobile */}
         <div className="lg:hidden">
           <SafeCarousel>
             {pricingTiers.map((tier, tierIndex) => (
               <div key={tier.name} className="pl-4 basis-[90%] sm:basis-2/3">
-                {/* ...sin cambios en la versión móvil... */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: tierIndex * 0.1 }}
+                >
+                  <Card className={cn('relative flex h-full flex-col rounded-2xl border-0 shadow-xl transition-all duration-300 ring-4 ring-offset-4 ring-offset-background', tier.ringClassName)}>
+                    {tier.isMostPopular && (
+                      <div className="absolute -top-3 left-1/2 z-20 -translate-x-1/2 transform">
+                        <div className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-1.5 text-sm font-semibold text-yellow-900 shadow-lg">
+                          <Star className="h-4 w-4" /> Más Popular
+                        </div>
+                      </div>
+                    )}
+                    <div className={cn('flex-grow flex flex-col p-6 sm:p-8 rounded-2xl', tier.className)}>
+                      <CardHeader className="p-0 text-center">
+                        <CardTitle className={cn('font-headline text-3xl', tier.name === 'Básico' && 'text-slate-900')}>{tier.name}</CardTitle>
+                        <div className="mt-4 flex items-baseline justify-center gap-1">
+                          <AnimatePresence mode="wait">
+                            <motion.span
+                              key={billingCycle}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className={cn('text-5xl font-bold tracking-tight', tier.name === 'Básico' && 'text-slate-900')}
+                            >
+                              {tier.price[billingCycle] === 0 ? 'Gratis' : format(tier.price[billingCycle])}
+                            </motion.span>
+                          </AnimatePresence>
+                          <span className={cn('text-sm', tier.name === 'Básico' ? 'text-slate-600' : 'text-white/70')}>
+                            {tier.price.monthly !== 0 ? tier.frequency[billingCycle] : tier.frequency.monthly}
+                          </span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-1 px-0 mt-8 mb-8">
+                        <div className={cn('relative rounded-lg p-6 bg-white/10 backdrop-blur-sm min-h-[6rem] flex items-center justify-center', tier.name === 'Básico' && 'bg-slate-200/50')}>
+                          <p className={cn('text-sm text-center', tier.name === 'Básico' ? 'text-slate-800' : 'text-white/90')}>
+                            {tier.description}
+                          </p>
+                        </div>
+                        <div className="my-6 h-px w-full bg-white/20" />
+                        <ul className="space-y-4">
+                          {tier.features.map((feature) => (
+                            <li key={feature} className="flex items-start gap-3">
+                              <CheckCircle className={cn('h-5 w-5 flex-shrink-0', tier.name === 'Básico' ? 'text-slate-500' : 'text-white/80')} />
+                              <span className={cn(tier.name === 'Básico' ? 'text-slate-700' : 'text-white/90')}>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                      <CardFooter className="p-0 mt-auto">
+                        <Button size="lg" variant={tier.buttonVariant as any} className={cn('w-full py-6 text-lg', tier.buttonClassName)} onClick={() => handleCheckout(tier.planKey)}>
+                          {tier.cta}
+                        </Button>
+                      </CardFooter>
+                    </div>
+                  </Card>
+                </motion.div>
               </div>
             ))}
           </SafeCarousel>
